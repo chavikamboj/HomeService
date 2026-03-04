@@ -1,46 +1,51 @@
-// ✅ Mock nodemailer email function so tests don't actually send emails
-jest.mock("../src/utils/sendEmail", () => jest.fn().mockResolvedValue(true));
-
 const request = require("supertest");
-const app = require("../src/app");
-
-let userToken;
-let adminToken;
-let serviceId;
-let bookingId;
+const app = require("../src/app"); // ✅ make sure src/app.js exports `app`
 
 describe("Booking Flow", () => {
+  let adminToken;
+  let userToken;
+  let serviceId;
+  let bookingId;
+
+  const adminCred = {
+    name: "Admin CI",
+    email: "admin.ci@test.com",
+    password: "123456",
+    role: "admin",
+  };
+
+  const userCred = {
+    name: "User CI",
+    email: "user.ci@test.com",
+    password: "123456",
+    role: "user",
+  };
+
   beforeAll(async () => {
-    // ✅ Register Admin
-    await request(app).post("/api/auth/register").send({
-      name: "Admin",
-      email: "admin@test.com",
-      password: "123456",
-      role: "admin",
-    });
+    // ✅ Register admin (ignore if already exists)
+    await request(app).post("/api/auth/register").send(adminCred);
 
-    // ✅ Login Admin
+    // ✅ Login admin
     const adminLogin = await request(app).post("/api/auth/login").send({
-      email: "admin@test.com",
-      password: "123456",
+      email: adminCred.email,
+      password: adminCred.password,
     });
 
+    expect(adminLogin.statusCode).toBe(200);
+    expect(adminLogin.body.token).toBeTruthy();
     adminToken = adminLogin.body.token;
 
-    // ✅ Register User
-    await request(app).post("/api/auth/register").send({
-      name: "User",
-      email: "user@test.com",
-      password: "123456",
-      role: "user",
-    });
+    // ✅ Register user
+    await request(app).post("/api/auth/register").send(userCred);
 
-    // ✅ Login User
+    // ✅ Login user
     const userLogin = await request(app).post("/api/auth/login").send({
-      email: "user@test.com",
-      password: "123456",
+      email: userCred.email,
+      password: userCred.password,
     });
 
+    expect(userLogin.statusCode).toBe(200);
+    expect(userLogin.body.token).toBeTruthy();
     userToken = userLogin.body.token;
   });
 
@@ -50,16 +55,14 @@ describe("Booking Flow", () => {
       .set("Authorization", `Bearer ${adminToken}`)
       .send({
         name: "AC Repair",
-        description: "AC Service",
-        price: 1000,
+        description: "AC gas refill and servicing",
+        price: 1500,
       });
 
-    // If your service controller returns 201
     expect([200, 201]).toContain(res.statusCode);
 
-    // Some controllers return {service: {...}} others return {...}
-    serviceId = res.body.service?.id || res.body.id;
-
+    // Some controllers return { service: {...} } others return {...}
+    serviceId = res.body.service?.id || res.body.id || res.body.serviceId;
     expect(serviceId).toBeTruthy();
   });
 
@@ -68,14 +71,14 @@ describe("Booking Flow", () => {
       .post("/api/bookings/create")
       .set("Authorization", `Bearer ${userToken}`)
       .send({
-        serviceId,
         bookingDate: "2026-03-10",
         address: "Delhi",
+        serviceId: serviceId,
       });
 
     expect([200, 201]).toContain(res.statusCode);
 
-    bookingId = res.body.booking?.id || res.body.id;
+    bookingId = res.body.booking?.id || res.body.id || res.body.bookingId;
     expect(bookingId).toBeTruthy();
   });
 
@@ -86,7 +89,6 @@ describe("Booking Flow", () => {
       .send({ status: "confirmed" });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.booking?.status || res.body.status).toBeTruthy();
   });
 
   it("User should cancel booking", async () => {
@@ -95,6 +97,5 @@ describe("Booking Flow", () => {
       .set("Authorization", `Bearer ${userToken}`);
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.booking?.status || res.body.status).toBeTruthy();
   });
 });

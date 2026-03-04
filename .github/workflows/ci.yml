@@ -10,6 +10,36 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: homeservice_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      NODE_ENV: test
+      PORT: 5000
+      JWT_SECRET: testsecretkey
+
+      # ✅ DB env for tests (Sequelize will use this)
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: root
+      DB_NAME: homeservice_test
+
+      # ✅ email optional in CI (not needed for tests)
+      EMAIL_USER: test@example.com
+      EMAIL_PASS: dummy
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,9 +48,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -proot && break
+            echo "waiting mysql..."
+            sleep 2
+          done
 
       - name: Run tests
         run: npm test

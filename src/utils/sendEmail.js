@@ -11,9 +11,6 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 20000,
   greetingTimeout: 20000,
   socketTimeout: 20000,
-  tls: {
-    family: 4,
-  },
 });
 
 const sendEmail = async ({ to, subject, text, html }) => {
@@ -29,7 +26,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
     console.log("Email sent ✅", info.messageId);
     return info;
   } catch (error) {
-    console.error("Email failed (create):", error);
+    console.error("Email failed (create):", error.message);
     throw error;
   }
 };

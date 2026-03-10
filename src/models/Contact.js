@@ -1,13 +1,19 @@
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-const contactSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  message: String,
-  createdAt: {
-    type: Date,
-    default: Date.now,
+const Contact = sequelize.define("Contact", {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  message: {
+    type: DataTypes.TEXT,
+    allowNull: false,
   },
 });
 
-module.exports = mongoose.model("Contact", contactSchema);
+module.exports = Contact;

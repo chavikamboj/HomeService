@@ -8,10 +8,11 @@ const sequelize = require("./src/config/database");
 const app = require("./src/app");
 const { initSocket } = require("./src/socket");
 
-// Load models once (so relations register)
+// Load models once
 require("./src/models/User");
 require("./src/models/Service");
 require("./src/models/Booking");
+require("./src/models/Contact"); // ✅ add this
 
 const server = http.createServer(app);
 
@@ -20,7 +21,6 @@ sequelize
   .then(() => {
     console.log("Database Connected ✅");
 
-    // email env check
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       console.log("Email env found ✅");
     } else {

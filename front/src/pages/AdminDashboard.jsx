@@ -4,17 +4,12 @@ import axios from "axios";
 function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const [contacts, setContacts] = useState([]);
-  const [bookingError, setBookingError] = useState("");
-  const [contactError, setContactError] = useState("");
-
-  const API_BASE_URL = "https://homeservice-production-8e5b.up.railway.app";
 
   const fetchBookings = async () => {
     try {
-      setBookingError("");
       const token = localStorage.getItem("token");
 
-      const res = await axios.get(`${API_BASE_URL}/api/bookings`, {
+      const res = await axios.get("http://localhost:5000/api/bookings", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -24,30 +19,31 @@ function AdminDashboard() {
         ? res.data
         : res.data.bookings || [];
 
-      console.log("BOOKINGS RESPONSE:", res.data);
       setBookings(bookingData);
     } catch (error) {
-      console.error("BOOKINGS ERROR:", error.response?.data || error.message);
-      setBookingError(error.response?.data?.message || error.message);
+      console.error(
+        "Error fetching bookings:",
+        error.response?.data || error.message
+      );
       setBookings([]);
     }
   };
 
   const fetchContacts = async () => {
     try {
-      setContactError("");
-
-      const res = await axios.get(`${API_BASE_URL}/api/contact`);
+      const res = await axios.get("http://localhost:5000/api/contact");
 
       const contactData = Array.isArray(res.data)
         ? res.data
         : res.data.contacts || [];
 
-      console.log("CONTACTS RESPONSE:", res.data);
+      console.log("Contacts:", contactData);
       setContacts(contactData);
     } catch (error) {
-      console.error("CONTACTS ERROR:", error.response?.data || error.message);
-      setContactError(error.response?.data?.message || error.message);
+      console.error(
+        "Error fetching contacts:",
+        error.response?.data || error.message
+      );
       setContacts([]);
     }
   };
@@ -57,7 +53,7 @@ function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       await axios.patch(
-        `${API_BASE_URL}/api/bookings/${id}/status`,
+        `http://localhost:5000/api/bookings/${id}/status`,
         { status },
         {
           headers: {
@@ -76,8 +72,6 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
-    console.log("API_BASE_URL:", API_BASE_URL);
-    console.log("TOKEN:", localStorage.getItem("token"));
     fetchBookings();
     fetchContacts();
   }, []);
@@ -88,14 +82,12 @@ function AdminDashboard() {
         <div className="admin-hero">
           <p className="admin-tag">Admin Dashboard</p>
           <h1>Manage All Bookings</h1>
-          <p>Review, track and update user booking statuses from one place.</p>
+          <p>
+            Review, track and update user booking statuses from one place.
+          </p>
         </div>
 
-        <p><strong>API URL:</strong> {API_BASE_URL || "Missing"}</p>
-        <p><strong>Token:</strong> {localStorage.getItem("token") ? "Present" : "Missing"}</p>
-
         <h2 className="admin-section-title">All Bookings</h2>
-        {bookingError && <p style={{ color: "red" }}>Booking Error: {bookingError}</p>}
 
         <div className="admin-booking-grid">
           {bookings.length === 0 ? (
@@ -142,16 +134,20 @@ function AdminDashboard() {
 
                 <p>
                   <strong>Price:</strong> ₹
-                  {booking.Service?.price || booking.service?.price || 0}
+                  {booking.Service?.price ||
+                    booking.service?.price ||
+                    0}
                 </p>
 
                 <div className="admin-btn-group">
                   <button onClick={() => updateBookingStatus(booking.id, "confirmed")}>
                     Confirm
                   </button>
+
                   <button onClick={() => updateBookingStatus(booking.id, "completed")}>
                     Complete
                   </button>
+
                   <button onClick={() => updateBookingStatus(booking.id, "cancelled")}>
                     Cancel
                   </button>
@@ -162,7 +158,6 @@ function AdminDashboard() {
         </div>
 
         <h2 className="admin-section-title">Contact Messages</h2>
-        {contactError && <p style={{ color: "red" }}>Contact Error: {contactError}</p>}
 
         <div className="admin-contact-grid">
           {contacts.length === 0 ? (

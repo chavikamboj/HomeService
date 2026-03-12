@@ -4,11 +4,14 @@ import axios from "axios";
 function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [bookingError, setBookingError] = useState("");
+  const [contactError, setContactError] = useState("");
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const API_BASE_URL = "https://homeservice-production-8e5b.up.railway.app";
 
   const fetchBookings = async () => {
     try {
+      setBookingError("");
       const token = localStorage.getItem("token");
 
       const res = await axios.get(`${API_BASE_URL}/api/bookings`, {
@@ -21,31 +24,30 @@ function AdminDashboard() {
         ? res.data
         : res.data.bookings || [];
 
+      console.log("BOOKINGS RESPONSE:", res.data);
       setBookings(bookingData);
     } catch (error) {
-      console.error(
-        "Error fetching bookings:",
-        error.response?.data || error.message
-      );
+      console.error("BOOKINGS ERROR:", error.response?.data || error.message);
+      setBookingError(error.response?.data?.message || error.message);
       setBookings([]);
     }
   };
 
   const fetchContacts = async () => {
     try {
+      setContactError("");
+
       const res = await axios.get(`${API_BASE_URL}/api/contact`);
 
       const contactData = Array.isArray(res.data)
         ? res.data
         : res.data.contacts || [];
 
-      console.log("Contacts:", contactData);
+      console.log("CONTACTS RESPONSE:", res.data);
       setContacts(contactData);
     } catch (error) {
-      console.error(
-        "Error fetching contacts:",
-        error.response?.data || error.message
-      );
+      console.error("CONTACTS ERROR:", error.response?.data || error.message);
+      setContactError(error.response?.data?.message || error.message);
       setContacts([]);
     }
   };
@@ -74,6 +76,8 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
+    console.log("API_BASE_URL:", API_BASE_URL);
+    console.log("TOKEN:", localStorage.getItem("token"));
     fetchBookings();
     fetchContacts();
   }, []);
@@ -84,12 +88,14 @@ function AdminDashboard() {
         <div className="admin-hero">
           <p className="admin-tag">Admin Dashboard</p>
           <h1>Manage All Bookings</h1>
-          <p>
-            Review, track and update user booking statuses from one place.
-          </p>
+          <p>Review, track and update user booking statuses from one place.</p>
         </div>
 
+        <p><strong>API URL:</strong> {API_BASE_URL || "Missing"}</p>
+        <p><strong>Token:</strong> {localStorage.getItem("token") ? "Present" : "Missing"}</p>
+
         <h2 className="admin-section-title">All Bookings</h2>
+        {bookingError && <p style={{ color: "red" }}>Booking Error: {bookingError}</p>}
 
         <div className="admin-booking-grid">
           {bookings.length === 0 ? (
@@ -106,9 +112,7 @@ function AdminDashboard() {
                       "Service"}
                   </h2>
 
-                  <span
-                    className={`status-badge ${booking.status?.toLowerCase()}`}
-                  >
+                  <span className={`status-badge ${booking.status?.toLowerCase()}`}>
                     {booking.status
                       ? booking.status.charAt(0).toUpperCase() +
                         booking.status.slice(1)
@@ -142,27 +146,13 @@ function AdminDashboard() {
                 </p>
 
                 <div className="admin-btn-group">
-                  <button
-                    onClick={() =>
-                      updateBookingStatus(booking.id, "confirmed")
-                    }
-                  >
+                  <button onClick={() => updateBookingStatus(booking.id, "confirmed")}>
                     Confirm
                   </button>
-
-                  <button
-                    onClick={() =>
-                      updateBookingStatus(booking.id, "completed")
-                    }
-                  >
+                  <button onClick={() => updateBookingStatus(booking.id, "completed")}>
                     Complete
                   </button>
-
-                  <button
-                    onClick={() =>
-                      updateBookingStatus(booking.id, "cancelled")
-                    }
-                  >
+                  <button onClick={() => updateBookingStatus(booking.id, "cancelled")}>
                     Cancel
                   </button>
                 </div>
@@ -172,6 +162,7 @@ function AdminDashboard() {
         </div>
 
         <h2 className="admin-section-title">Contact Messages</h2>
+        {contactError && <p style={{ color: "red" }}>Contact Error: {contactError}</p>}
 
         <div className="admin-contact-grid">
           {contacts.length === 0 ? (

@@ -5,11 +5,13 @@ function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const [contacts, setContacts] = useState([]);
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   const fetchBookings = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get("http://localhost:5000/api/bookings", {
+      const res = await axios.get(`${API_BASE_URL}/api/bookings`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -31,7 +33,7 @@ function AdminDashboard() {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/contact");
+      const res = await axios.get(`${API_BASE_URL}/api/contact`);
 
       const contactData = Array.isArray(res.data)
         ? res.data
@@ -53,7 +55,7 @@ function AdminDashboard() {
       const token = localStorage.getItem("token");
 
       await axios.patch(
-        `http://localhost:5000/api/bookings/${id}/status`,
+        `${API_BASE_URL}/api/bookings/${id}/status`,
         { status },
         {
           headers: {
@@ -104,7 +106,9 @@ function AdminDashboard() {
                       "Service"}
                   </h2>
 
-                  <span className={`status-badge ${booking.status?.toLowerCase()}`}>
+                  <span
+                    className={`status-badge ${booking.status?.toLowerCase()}`}
+                  >
                     {booking.status
                       ? booking.status.charAt(0).toUpperCase() +
                         booking.status.slice(1)
@@ -134,21 +138,31 @@ function AdminDashboard() {
 
                 <p>
                   <strong>Price:</strong> ₹
-                  {booking.Service?.price ||
-                    booking.service?.price ||
-                    0}
+                  {booking.Service?.price || booking.service?.price || 0}
                 </p>
 
                 <div className="admin-btn-group">
-                  <button onClick={() => updateBookingStatus(booking.id, "confirmed")}>
+                  <button
+                    onClick={() =>
+                      updateBookingStatus(booking.id, "confirmed")
+                    }
+                  >
                     Confirm
                   </button>
 
-                  <button onClick={() => updateBookingStatus(booking.id, "completed")}>
+                  <button
+                    onClick={() =>
+                      updateBookingStatus(booking.id, "completed")
+                    }
+                  >
                     Complete
                   </button>
 
-                  <button onClick={() => updateBookingStatus(booking.id, "cancelled")}>
+                  <button
+                    onClick={() =>
+                      updateBookingStatus(booking.id, "cancelled")
+                    }
+                  >
                     Cancel
                   </button>
                 </div>
